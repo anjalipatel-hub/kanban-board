@@ -61,9 +61,19 @@ Easily persist your Kanban board data locally using the power of `localStorage`.
 3. **Run the App:**
 
    Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+ 
 
-## Contributions 🤝
+3. **UI Snapshots**
 
-Ready to spice things up? We'd love your touch. Fork, branch, and pull request away!
+**Kanban dashbpoard**
+![Kanban UI](./src/app/App-snashot/kanban-dashboard.png)
 
-Happy task juggling! 🚀🎉
+**Add/edit Task**
+![Kanban UI](./src/app/App-snashot/Edit-task.png)
+
+**Edit Board**
+![Kanban UI](./src/app/App-snashot/edit-board.png)
+
+**Delet Board**
+![Kanban UI](./src/app/App-snashot/delete-board.png)
+
