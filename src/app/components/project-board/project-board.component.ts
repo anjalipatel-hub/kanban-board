@@ -12,6 +12,7 @@ import { Task } from '../../models/task.model';
 import { MatDialog } from '@angular/material/dialog';
 import { ViewTaskModalComponent } from '../modals/view-task-modal/view-task-modal.component';
 import { TaskOption } from '../../models/modal.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-project-board',
@@ -21,6 +22,7 @@ import { TaskOption } from '../../models/modal.model';
     NgFor,
     NgStyle,
     NgClass,
+    FormsModule,
     TaskCardComponent,
     DragDropModule,
     ViewTaskModalComponent,
@@ -39,7 +41,23 @@ export class ProjectBoardComponent {
   @Output() taskUpdateModal = new EventEmitter<Task>();
   @Output() taskDeleteModal = new EventEmitter<Task>();
 
+  // Filters
+  searchTerm: string = '';
+  filterStatus: string = '';
+  filterPriority: string = '';
+  filterStartDate: string = '';
+  filterEndDate: string = ''; 
+
+  // Pagination
+  pages: number[] = []; // one page tracker per column
+  itemsPerPage: number = 5;
+
   constructor(private dialog: MatDialog) {}
+
+  ngOnit(): void {
+    this.activeBoard = this.activeBoard;
+    console.log(this.activeBoard);
+  }
 
   drop(event: CdkDragDrop<Task[]>) {
     if (this.activeBoard) {
@@ -92,4 +110,60 @@ export class ProjectBoardComponent {
       }
     });
   }
+
+  // ✅ Filtering
+  getFilteredTasks(tasks: Task[]): Task[] {
+    return tasks.filter((task) => {
+      const matchesSearch =
+        this.searchTerm === '' ||
+        task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.description?.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      const matchesStatus =
+        this.filterStatus === '' || task.status === this.filterStatus;
+
+      const matchesPriority =
+        this.filterPriority === '' || task.priority === this.filterPriority;
+
+      const matchesDateRange =
+        (!this.filterStartDate ||
+          new Date(task.dueDate) >= new Date(this.filterStartDate)) &&
+        (!this.filterEndDate ||
+          new Date(task.dueDate) <= new Date(this.filterEndDate));
+
+      return (
+        matchesSearch && matchesStatus && matchesPriority && matchesDateRange
+      );
+    });
+  }
+
+  // ✅ Pagination Helpers
+  private ensurePage(index: number) {
+    if (!this.pages[index]) {
+      this.pages[index] = 1;
+    }
+  }
+
+  getPagedTasks(tasks: Task[], columnIndex: number): Task[] {
+    this.ensurePage(columnIndex);
+    const page = this.pages[columnIndex];
+    const start = (page - 1) * this.itemsPerPage;
+    return tasks.slice(start, start + this.itemsPerPage);
+  }
+
+  nextPage(total: number, columnIndex: number) {
+    this.ensurePage(columnIndex);
+    if (this.pages[columnIndex] * this.itemsPerPage < total) {
+      this.pages[columnIndex]++;
+    }
+  }
+
+  prevPage(columnIndex: number) {
+    this.ensurePage(columnIndex);
+    if (this.pages[columnIndex] > 1) {
+      this.pages[columnIndex]--;
+    }
+  }
+
+  
 }

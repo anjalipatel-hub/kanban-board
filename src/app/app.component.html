@@ -1,37 +1,67 @@
-<div
-  [ngClass]="{ dark: darkMode }"
-  class="root-container relative flex overflow-hidden"
->
-  <app-sidebar
-    [boards]="boards()"
-    [activeBoard]="activeBoard()"
-    [opened]="isSidebarOpen"
-    (selected)="selectBoard($event)"
-    (enableDarkMode)="toggleDarkMode($event)"
-    (closeSidebar)="closeSidebar()"
-    (add)="addBoard()"
-  ></app-sidebar>
+<!-- Page Wrapper -->
+<div class="flex flex-col h-screen">
 
-  <app-sidebar-toggle (openSidebar)="openSideBar()"></app-sidebar-toggle>
-
-  <main
-    class="main flex-1 duration-700"
-    [ngClass]="{ 'sm:ml-[26rem] lg:ml-[30rem]': isSidebarOpen }"
+  <!-- 🔍 Filters & Search Bar -->
+  <div
+    class="filters-bar sticky top-0 z-20 flex flex-wrap items-center gap-6 
+           p-5 bg-white dark:bg-grey-dark shadow-md"
   >
-    <app-navbar
-      [opened]="isSidebarOpen"
-      [activeBoard]="activeBoard()"
-      [boards]="boards()"
-      [darkMode]="darkMode"
-      (boardSelect)="selectBoard($event)"
-      (boardAdd)="addBoard()"
-      (boardEdit)="editBoard()"
-      (boardDelete)="deleteBoard()"
-      (taskAdd)="addTask()"
-    ></app-navbar>
+    <!-- Search -->
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      placeholder="🔍 Search tasks..."
+      class="border border-gray-300 rounded-lg px-4 py-2 w-72
+             focus:ring-2 focus:ring-purple-500 focus:outline-none"
+    />
 
+    <!-- Status Filter -->
+    <select
+      [(ngModel)]="filterStatus"
+      class="border border-gray-300 rounded-lg px-4 py-2
+             focus:ring-2 focus:ring-purple-500 focus:outline-none"
+    >
+      <option value="">All Status</option>
+      <option value="todo">To Do</option>
+      <option value="in-progress">In Progress</option>
+      <option value="done">Done</option>
+    </select>
+
+    <!-- Priority Filter -->
+    <select
+      [(ngModel)]="filterPriority"
+      class="border border-gray-300 rounded-lg px-4 py-2
+             focus:ring-2 focus:ring-purple-500 focus:outline-none"
+    >
+      <option value="">All Priority</option>
+      <option value="Low">Low</option>
+      <option value="Medium">Medium</option>
+      <option value="High">High</option>
+    </select>
+
+    <!-- Date Range -->
+    <div class="flex items-center gap-2">
+      <input
+        type="date"
+        [(ngModel)]="filterStartDate"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-purple-500 focus:outline-none"
+      />
+      <span class="text-gray-500">to</span>
+      <input
+        type="date"
+        [(ngModel)]="filterEndDate"
+        class="border border-gray-300 rounded-lg px-3 py-2
+               focus:ring-2 focus:ring-purple-500 focus:outline-none"
+      />
+    </div>
+
+  <!-- 🗂️ Kanban Board (scrollable area) -->
+  <div
+    class="board-container flex-1 overflow-auto whitespace-nowrap 
+           bg-grey-light dark:bg-grey-vdark px-6 py-6"
+  >
     <app-project-board
-      [darkMode]="darkMode"
       [activeBoard]="activeBoard()"
       (columnAdd)="editBoard()"
       (boardEdit)="updateBoardAfterTaskReorder($event)"
@@ -39,5 +69,6 @@
       (taskDeleteModal)="deleteTask($event)"
       (taskUpdateModal)="editTask($event)"
     ></app-project-board>
-  </main>
+  </div>
+
 </div>

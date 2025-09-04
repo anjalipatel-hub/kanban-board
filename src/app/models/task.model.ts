@@ -5,4 +5,7 @@ export interface Task {
   description: string;
   status: string;
   subtasks: SubTask[];
+  id: number;
+  priority: 'Low' | 'Medium' | 'High';
+  dueDate: string;
 }
