@@ -65,6 +65,12 @@ Easily persist your Kanban board data locally using the power of `localStorage`.
 
 3. **UI Snapshots**
 
+**Login**
+![Kanban UI](./src/app/App-snashot/login.png)
+
+**Sign-up**
+![Kanban UI](./src/app/App-snashot/sign-up.png)
+
 **Kanban dashbpoard**
 ![Kanban UI](./src/app/App-snashot/kanban-dashboard.png)
 
