@@ -13,6 +13,8 @@ import { ThemeTogglerComponent } from './components/sidebar/theme-toggler/theme-
 import { Board } from './models/board.model';
 import { Task } from './models/task.model';
 import { BoardDataService } from './services/board-data/board-data.service';
+import { LoginComponent } from './components/auth/login/login.component';
+import { SignupComponent } from './components/auth/signup/signup.component';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +23,8 @@ import { BoardDataService } from './services/board-data/board-data.service';
     CommonModule,
     RouterOutlet,
     SidebarComponent,
+    LoginComponent,
+    SignupComponent,
     ThemeTogglerComponent,
     NavbarComponent,
     ProjectBoardComponent,
@@ -32,151 +36,5 @@ import { BoardDataService } from './services/board-data/board-data.service';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit {
-  darkMode = false;
-
-  isSidebarOpen = true;
-
-  boards = this.boardDataService.boards;
-
-  activeBoard = this.boardDataService.activeBoard;
-
-  currentIdx = this.boardDataService.currentIdx;
-
-  constructor(
-    private dialog: MatDialog,
-    private boardDataService: BoardDataService,
-  ) {}
-
-  ngOnInit(): void {
-    this.boardDataService.getBoards();
-  }
-
-  selectBoard(boardIdx: number) {
-    this.boardDataService.selectBoard(boardIdx);
-  }
-
-  toggleDarkMode(enableDarkMode: boolean) {
-    this.darkMode = enableDarkMode;
-  }
-
-  openSideBar(): void {
-    this.isSidebarOpen = true;
-  }
-
-  closeSidebar() {
-    this.isSidebarOpen = false;
-  }
-
-  addBoard(): void {
-    const dialogRef = this.dialog.open(BoardModalComponent, {
-      data: { board: { name: '', columns: [] }, darkMode: this.darkMode },
-    });
-
-    dialogRef.afterClosed().subscribe((res: Board) => {
-      if (!res) {
-        return;
-      }
-
-      this.boardDataService.addBoard(res);
-    });
-  }
-
-  editBoard(): void {
-    const dialogRef = this.dialog.open(BoardModalComponent, {
-      data: {
-        board: this.activeBoard() ? this.activeBoard() : { name: '', columns: [] },
-        darkMode: this.darkMode,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((res: Board) => {
-      if (!res) {
-        return;
-      }
-
-      this.boardDataService.editBoard(res);
-    });
-  }
-
-  updateBoardAfterTaskReorder(updateBoard: Board) {
-    this.boardDataService.editBoard(updateBoard);
-  }
-
-  deleteBoard(): void {
-    const dialogRef = this.dialog.open(DeleteModalComponent, {
-      data: {
-        name: this.activeBoard()?.name,
-        isBoard: true,
-        darkMode: this.darkMode,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((success: boolean) => {
-      if (!success) {
-        return;
-      }
-
-      this.boardDataService.deleteBoard();
-    });
-  }
-
-  addTask(): void {
-    const dialogRef = this.dialog.open(TaskModalComponent, {
-      data: {
-        editMode: false,
-        darkMode: this.darkMode,
-        columns: this.activeBoard()?.columns,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((res: Task) => {
-      if (!res) {
-        return;
-      }
-
-      this.boardDataService.addTask(res);
-    });
-  }
-
-  editTask(editTask: Task): void {
-    const dialogRef = this.dialog.open(TaskModalComponent, {
-      data: {
-        task: editTask,
-        editMode: true,
-        darkMode: this.darkMode,
-        columns: this.activeBoard()?.columns,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((res: Task) => {
-      if (!res) {
-        return;
-      }
-
-      this.updateTask({ task: res, columnName: res.status });
-    });
-  }
-
-  updateTask(updateTask: { task: Task; columnName: string }) {
-    this.boardDataService.updateTask(updateTask);
-  }
-
-  deleteTask(deleteTask: Task): void {
-    const dialogRef = this.dialog.open(DeleteModalComponent, {
-      data: {
-        name: deleteTask.title,
-        isBoard: false,
-        darkMode: this.darkMode,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((success: boolean) => {
-      if (!success) {
-        return;
-      }
-
-      this.boardDataService.deleteTask(deleteTask);
-    });
-  }
+export class AppComponent {
 }

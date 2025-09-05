@@ -2,7 +2,6 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   Inject,
   Injectable,
-  PLATFORM_ID,
   computed,
   effect,
   signal,
@@ -15,152 +14,120 @@ import { BoardHttpService } from '../board-http/board-http.service';
   providedIn: 'root',
 })
 export class BoardDataService {
+  // store all boards
   boards = signal<Board[]>([]);
 
+  // currently selected board index
   currentIdx = signal(0);
 
+  // derived signal for active board
   activeBoard = computed(() =>
-    this.boards().length > 0 ? this.boards()[this.currentIdx()] : null,
+    this.boards().length > 0 ? this.boards()[this.currentIdx()] : null
   );
 
-  private saveBoards = effect(() => {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('boards', JSON.stringify(this.boards()));
-    }
-  });
+  constructor(private boardHttp: BoardHttpService) {}
 
-  constructor(
-    private boardHttp: BoardHttpService,
-    @Inject(PLATFORM_ID) private platformId: object,
-  ) {}
-
-  
-getBoards(): void {
-  this.boardHttp
-    .getBoards()
-    .subscribe((res: { boards: Board[] }) => {
-      this.boards.set(res.boards);
+  // ✅ Fetch boards from assets/data.json
+  getBoards(): void {
+    this.boardHttp.getBoards().subscribe({
+      next: (res: { boards: Board[] }) => {
+        this.boards.set(res.boards);
+      },
+      error: (err) => console.error('Failed to load boards', err),
     });
-}
+  }
 
-
-  selectBoard(boardIdx: number) {
+  // ✅ Switch active board
+  selectBoard(boardIdx: number): void {
     this.currentIdx.set(boardIdx);
   }
 
+  // ✅ Add new board
   addBoard(board: Board): void {
     this.boards.update((boards) => [...boards, board]);
-
     this.selectBoard(this.boards().length - 1);
   }
 
-  editBoard(updatedBoard: Board) {
+  // ✅ Edit existing board
+  editBoard(updatedBoard: Board): void {
     this.boards.update((boards) =>
-      boards.map((board) =>
-        board === this.activeBoard() ? { ...updatedBoard } : board,
-      ),
+      boards.map((board, idx) =>
+        idx === this.currentIdx() ? { ...updatedBoard } : board
+      )
     );
   }
 
-  deleteBoard() {
+  // ✅ Delete active board
+  deleteBoard(): void {
     this.boards.update((boards) =>
-      boards.filter((board) => board !== this.activeBoard()),
+      boards.filter((_, idx) => idx !== this.currentIdx())
     );
 
-    if (this.boards().length >= 1) {
+    if (this.boards().length > 0) {
       this.selectBoard(0);
+    } else {
+      this.currentIdx.set(0);
     }
   }
 
-  addTask(task: Task) {
+  // ✅ Add task to active board
+  addTask(task: Task): void {
     this.boards.update((boards) =>
-      boards.map((board) =>
-        board === this.activeBoard()
+      boards.map((board, idx) =>
+        idx === this.currentIdx()
           ? {
               ...board,
-              columns: board.columns.map((column) => ({
-                ...column,
-                tasks:
-                  column.name === task.status
-                    ? [...column.tasks, task]
-                    : column.tasks,
-              })),
+              columns: board.columns.map((col) =>
+                col.name === task.status
+                  ? { ...col, tasks: [...col.tasks, task] }
+                  : col
+              ),
             }
-          : board,
-      ),
+          : board
+      )
     );
   }
 
-  updateTask(updateTask: { task: Task; columnName: string }) {
-    const currentColumnName = this.activeBoard()
-      ?.columns.map((column) => ({
-        ...column,
-        tasks: column.tasks.filter(
-          (task) => task.title === updateTask.task.title,
-        ),
-      }))
-      .filter((column) => column.tasks.length > 0)
-      .map((column) => column.name)[0];
-
+  // ✅ Update task (move or edit)
+  updateTask(updateTask: { task: Task; columnName: string }): void {
     this.boards.update((boards) =>
-      boards.map((board) => {
-        if (board === this.activeBoard()) {
-          if (currentColumnName === updateTask.columnName) {
-            // Update same column with updated task
-            return {
-              ...board,
-              columns: board.columns.map((column) => ({
-                ...column,
-                tasks: column.tasks.map((task) =>
-                  task.title === updateTask.task.title
-                    ? { ...updateTask.task }
-                    : task,
-                ),
-              })),
-            };
-          } else {
-            // remove task from current column
-            return {
-              ...board,
-              columns: board.columns.map((column) => {
-                if (column.name === updateTask.columnName) {
-                  return {
-                    ...column,
-                    tasks: [...column.tasks, updateTask.task],
-                  };
-                } else if (column.name === currentColumnName) {
-                  return {
-                    ...column,
-                    tasks: column.tasks.filter(
-                      (task) => task.title !== updateTask.task.title,
-                    ),
-                  };
-                } else {
-                  return column;
-                }
-              }),
-            };
-          }
-        } else {
-          return board;
-        }
-      }),
+      boards.map((board, idx) => {
+        if (idx !== this.currentIdx()) return board;
+
+        // remove from old column
+        const updatedColumns = board.columns.map((col) => ({
+          ...col,
+          tasks: col.tasks.filter((t) => t.title !== updateTask.task.title),
+        }));
+
+        // add into new column
+        return {
+          ...board,
+          columns: updatedColumns.map((col) =>
+            col.name === updateTask.columnName
+              ? { ...col, tasks: [...col.tasks, updateTask.task] }
+              : col
+          ),
+        };
+      })
     );
   }
 
-  deleteTask(deleteTask: Task) {
+  // ✅ Delete task
+  deleteTask(deleteTask: Task): void {
     this.boards.update((boards) =>
-      boards.map((board) =>
-        board === this.activeBoard()
+      boards.map((board, idx) =>
+        idx === this.currentIdx()
           ? {
               ...board,
-              columns: board.columns.map((column) => ({
-                ...column,
-                tasks: column.tasks.filter((task) => task !== deleteTask),
+              columns: board.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks.filter((t) => t.title !== deleteTask.title),
               })),
             }
-          : board,
-      ),
+          : board
+      )
     );
   }
+
 }
