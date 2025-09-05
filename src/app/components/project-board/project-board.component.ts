@@ -165,5 +165,11 @@ export class ProjectBoardComponent {
     }
   }
 
-  
+  resetFilters(){
+    this.searchTerm = '';
+    this.filterStatus = '';
+    this.filterPriority = '';
+    this.filterStartDate = '';
+    this.filterEndDate = '';  
+  }
 }
