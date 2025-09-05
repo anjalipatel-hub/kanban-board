@@ -34,23 +34,15 @@ export class BoardDataService {
     @Inject(PLATFORM_ID) private platformId: object,
   ) {}
 
-  getBoards(): void {
-    let userBoards!: Board[] | null;
+  
+getBoards(): void {
+  this.boardHttp
+    .getBoards()
+    .subscribe((res: { boards: Board[] }) => {
+      this.boards.set(res.boards);
+    });
+}
 
-    if (isPlatformBrowser(this.platformId)) {
-      userBoards = JSON.parse(localStorage.getItem('boards') as string) as
-        | Board[]
-        | null;
-    }
-
-    if (userBoards) {
-      this.boards.set(userBoards);
-    } else {
-      this.boardHttp
-        .getBoards()
-        .subscribe((res) => this.boards.set(res.boards));
-    }
-  }
 
   selectBoard(boardIdx: number) {
     this.currentIdx.set(boardIdx);
