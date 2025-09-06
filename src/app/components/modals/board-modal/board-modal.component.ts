@@ -9,6 +9,8 @@ import {
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Board } from '../../../models/board.model';
+import { AuthService } from '../../../services/auth.service';
+import { BoardDataService } from '../../../services/board-data/board-data.service';
 
 @Component({
   selector: 'app-board-modal',
@@ -24,6 +26,8 @@ export class BoardModalComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<BoardModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { board: Board; darkMode: boolean },
+    private auth: AuthService,
+    private boardDataService: BoardDataService
   ) {}
 
   ngOnInit(): void {
@@ -71,8 +75,10 @@ export class BoardModalComponent implements OnInit {
 
   submit() {
     const editMode = !!this.data.board.name;
+    console.log('Edit mode:', editMode);
 
     if (editMode) {
+      // ✅ Update existing board
       const updatedBoard: Board = {
         ...this.data.board,
         name: this.form.value.name,
@@ -84,11 +90,33 @@ export class BoardModalComponent implements OnInit {
         ),
       };
 
-      this.dialogRef.close({ ...updatedBoard });
-    }
+      this.dialogRef.close(updatedBoard);
+    } else {
+      // ✅ Create new board for current user
+      const newBoard: Board = {
+        name: this.form.value.name,
+        columns: this.form.value.columns,
+      };
 
-    if (!editMode) {
-      this.dialogRef.close({ ...this.form.value });
+      const currentUser = this.auth.getCurrentUser();
+      if (currentUser) {
+        currentUser.boards = [...(currentUser.boards || []), newBoard];
+
+        // update users list in localStorage
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const idx = users.findIndex((u: any) => u.id === currentUser.id);
+        if (idx !== -1) {
+          users[idx] = currentUser;
+          localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // update currentUser in storage
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        // update BoardDataService
+        this.boardDataService.addBoard(newBoard);
+      }
+
+      this.dialogRef.close(newBoard);
     }
-  }
-}
+  }}

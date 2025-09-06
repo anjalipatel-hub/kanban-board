@@ -70,18 +70,18 @@ export class BoardsComponent {
   }
 
   addBoard(): void {
-    const dialogRef = this.dialog.open(BoardModalComponent, {
-      data: { board: { name: '', columns: [] }, darkMode: this.darkMode },
-    });
+    console.log("Add board clicked");
+  const dialogRef = this.dialog.open(BoardModalComponent, {
+    data: { board: { name: '', columns: [] }, darkMode: this.darkMode },
+  });
 
-    dialogRef.afterClosed().subscribe((res: Board) => {
-      if (!res) {
-        return;
-      }
+  dialogRef.afterClosed().subscribe((res: Board) => {
+    if (!res) return;
 
-      this.boardDataService.addBoard(res);
-    });
-  }
+    this.boardDataService.addBoard(res); // ✅ saves under user ID
+  });
+}
+
 
   editBoard(): void {
     const dialogRef = this.dialog.open(BoardModalComponent, {

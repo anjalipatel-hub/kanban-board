@@ -9,125 +9,146 @@ import {
 import { Board } from '../../models/board.model';
 import { Task } from '../../models/task.model';
 import { BoardHttpService } from '../board-http/board-http.service';
+import { AuthService } from '../auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BoardDataService {
-  // store all boards
   boards = signal<Board[]>([]);
-
-  // currently selected board index
   currentIdx = signal(0);
 
-  // derived signal for active board
   activeBoard = computed(() =>
     this.boards().length > 0 ? this.boards()[this.currentIdx()] : null
   );
 
-  constructor(private boardHttp: BoardHttpService) {}
+  constructor(private auth: AuthService) {}
 
-  // ✅ Fetch boards from assets/data.json
   getBoards(): void {
-    this.boardHttp.getBoards().subscribe({
-      next: (res: { boards: Board[] }) => {
-        this.boards.set(res.boards);
-      },
-      error: (err) => console.error('Failed to load boards', err),
-    });
+    const userBoards = this.auth.getUserBoards();
+    this.boards.set(userBoards);
   }
 
-  // ✅ Switch active board
-  selectBoard(boardIdx: number): void {
+  private persist() {
+    this.auth.saveUserBoards(this.boards());
+  }
+
+  selectBoard(boardIdx: number) {
     this.currentIdx.set(boardIdx);
   }
 
-  // ✅ Add new board
   addBoard(board: Board): void {
     this.boards.update((boards) => [...boards, board]);
     this.selectBoard(this.boards().length - 1);
+    this.persist();
   }
 
-  // ✅ Edit existing board
-  editBoard(updatedBoard: Board): void {
+  editBoard(updatedBoard: Board) {
     this.boards.update((boards) =>
-      boards.map((board, idx) =>
-        idx === this.currentIdx() ? { ...updatedBoard } : board
+      boards.map((board) =>
+        board === this.activeBoard() ? { ...updatedBoard } : board
       )
     );
+    this.persist();
   }
 
-  // ✅ Delete active board
-  deleteBoard(): void {
+  deleteBoard() {
     this.boards.update((boards) =>
-      boards.filter((_, idx) => idx !== this.currentIdx())
+      boards.filter((board) => board !== this.activeBoard())
     );
-
-    if (this.boards().length > 0) {
-      this.selectBoard(0);
-    } else {
-      this.currentIdx.set(0);
-    }
+    if (this.boards().length >= 1) this.selectBoard(0);
+    this.persist();
   }
 
-  // ✅ Add task to active board
-  addTask(task: Task): void {
+  addTask(task: Task) {
     this.boards.update((boards) =>
-      boards.map((board, idx) =>
-        idx === this.currentIdx()
+      boards.map((board) =>
+        board === this.activeBoard()
           ? {
               ...board,
-              columns: board.columns.map((col) =>
-                col.name === task.status
-                  ? { ...col, tasks: [...col.tasks, task] }
-                  : col
-              ),
-            }
-          : board
-      )
-    );
-  }
-
-  // ✅ Update task (move or edit)
-  updateTask(updateTask: { task: Task; columnName: string }): void {
-    this.boards.update((boards) =>
-      boards.map((board, idx) => {
-        if (idx !== this.currentIdx()) return board;
-
-        // remove from old column
-        const updatedColumns = board.columns.map((col) => ({
-          ...col,
-          tasks: col.tasks.filter((t) => t.title !== updateTask.task.title),
-        }));
-
-        // add into new column
-        return {
-          ...board,
-          columns: updatedColumns.map((col) =>
-            col.name === updateTask.columnName
-              ? { ...col, tasks: [...col.tasks, updateTask.task] }
-              : col
-          ),
-        };
-      })
-    );
-  }
-
-  // ✅ Delete task
-  deleteTask(deleteTask: Task): void {
-    this.boards.update((boards) =>
-      boards.map((board, idx) =>
-        idx === this.currentIdx()
-          ? {
-              ...board,
-              columns: board.columns.map((col) => ({
-                ...col,
-                tasks: col.tasks.filter((t) => t.title !== deleteTask.title),
+              columns: board.columns.map((column) => ({
+                ...column,
+                tasks:
+                  column.name === task.status
+                    ? [...column.tasks, task]
+                    : column.tasks,
               })),
             }
           : board
       )
     );
+    this.persist();
   }
 
+  updateTask(updateTask: { task: Task; columnName: string }) {
+    const currentColumnName = this.activeBoard()
+      ?.columns.map((column) => ({
+        ...column,
+        tasks: column.tasks.filter(
+          (task) => task.title === updateTask.task.title
+        ),
+      }))
+      .filter((column) => column.tasks.length > 0)
+      .map((column) => column.name)[0];
+
+    this.boards.update((boards) =>
+      boards.map((board) => {
+        if (board === this.activeBoard()) {
+          if (currentColumnName === updateTask.columnName) {
+            return {
+              ...board,
+              columns: board.columns.map((column) => ({
+                ...column,
+                tasks: column.tasks.map((task) =>
+                  task.title === updateTask.task.title
+                    ? { ...updateTask.task }
+                    : task
+                ),
+              })),
+            };
+          } else {
+            return {
+              ...board,
+              columns: board.columns.map((column) => {
+                if (column.name === updateTask.columnName) {
+                  return {
+                    ...column,
+                    tasks: [...column.tasks, updateTask.task],
+                  };
+                } else if (column.name === currentColumnName) {
+                  return {
+                    ...column,
+                    tasks: column.tasks.filter(
+                      (task) => task.title !== updateTask.task.title
+                    ),
+                  };
+                } else {
+                  return column;
+                }
+              }),
+            };
+          }
+        }
+        return board;
+      })
+    );
+    this.persist();
+  }
+
+  deleteTask(deleteTask: Task) {
+    this.boards.update((boards) =>
+      boards.map((board) =>
+        board === this.activeBoard()
+          ? {
+              ...board,
+              columns: board.columns.map((column) => ({
+                ...column,
+                tasks: column.tasks.filter((task) => task !== deleteTask),
+              })),
+            }
+          : board
+      )
+    );
+    this.persist();
+  }
 }
