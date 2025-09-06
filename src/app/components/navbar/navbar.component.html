@@ -22,11 +22,13 @@
     >
       {{ activeBoard?.name }}
     </h1>
-    <div class="flex gap-2.4 sm:pt-1.6 lg:pt-8  w-[16.4rem] lg:w-[19.2rem]">
+    <div class="flex gap-2.4 sm:pt-1.6 lg:pt-8">
       <button
         [disabled]="!activeBoard?.columns?.length"
         (click)="addTask()"
-        class="btn-primary btn-lg w-[16.4rem]"
+    class="w-72 sm:w-56 lg:w-64 py-3 rounded-xl font-semibold text-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-shadow shadow-md"
+      style="background-color: rgba(99, 95, 199, 1.0);"
+
       >
         + Add New Task
       </button>

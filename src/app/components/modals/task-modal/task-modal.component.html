@@ -6,10 +6,12 @@
 >
   <h4
     [ngClass]="{ 'text-white': data.darkMode, 'text-black': !data.darkMode }"
-    class="text-lg font-bold leading-lg"
+    class="text-lg font-bold leading-lg w-full"
   >
-    {{ data.editMode ? "Edit Task" : "Add New Task" }}
+    {{ data.editMode ? 'Edit Task' : 'Add New Task' }}
   </h4>
+
+  <!-- Title -->
   <div class="flex flex-col">
     <h5
       [ngClass]="{
@@ -49,6 +51,8 @@
       >
     </div>
   </div>
+
+  <!-- Description -->
   <div class="flex flex-col">
     <h5
       [ngClass]="{
@@ -65,9 +69,10 @@
       [ngClass]="{ 'text-white': data.darkMode, 'text-black': !data.darkMode }"
       placeholder="e.g. It’s always good to take a break. This 15 minute break will recharge the batteries a little."
       class="main-control h-[11.2rem] resize-none"
-    >
-    </textarea>
+    ></textarea>
   </div>
+
+  <!-- Subtasks -->
   <div>
     <h5
       [ngClass]="{
@@ -82,11 +87,12 @@
       <div
         *ngFor="let control of subTaskArray.controls; let i = index"
         class="flex gap-1.6"
+        [formGroupName]="i"
       >
-        <div class="relative flex-1" formGroupName="{{ i }}">
+        <div class="relative flex-1">
           <input
-            [id]="i"
             type="text"
+            formControlName="title"
             [ngClass]="{
               'text-white': data.darkMode,
               'text-black': !data.darkMode,
@@ -97,7 +103,6 @@
                 control.get('title')?.errors?.['required']
             }"
             class="main-control h-16"
-            formControlName="title"
           />
           <span
             *ngIf="
@@ -110,18 +115,9 @@
             >Can’t be empty</span
           >
         </div>
-
         <button type="button" class="marker" (click)="removeSubtask(i)">
-          <img
-            src="assets/images/icon-cross.svg"
-            alt="remove"
-            class="idle h-6 w-6"
-          />
-          <img
-            src="assets/images/icon-cross-hover.svg"
-            alt="remove"
-            class="cover h-6 w-6"
-          />
+          <img src="assets/images/icon-cross.svg" alt="remove" class="idle h-6 w-6" />
+          <img src="assets/images/icon-cross-hover.svg" alt="remove" class="cover h-6 w-6" />
         </button>
       </div>
       <button
@@ -137,6 +133,8 @@
       </button>
     </div>
   </div>
+
+  <!-- Current Status -->
   <div>
     <h5
       [ngClass]="{
@@ -160,11 +158,35 @@
       </option>
     </select>
   </div>
-  <button
-    [disabled]="form.invalid"
-    class="btn btn-sm btn-primary"
-    type="submit"
+
+  <!-- Priority -->
+ <div>
+  <h5
+    [ngClass]="{
+      'text-white': data.darkMode,
+      'text-grey-medium': !data.darkMode
+    }"
+    class="mb-1.6 text-sm font-bold leading-sm"
   >
-    {{ data.editMode ? "Save Changes" : "Create Task" }}
+    Priority
+  </h5>
+  <select
+    class="bg-gray-50 border-gray-300 text-gray-900 block w-full rounded-lg border px-2 py-4 text-sm"
+    [ngClass]="{
+      'bg-grey-vdark text-white': data.darkMode,
+      'bg-white': !data.darkMode
+    }"
+    formControlName="priority"
+  >
+    <option *ngFor="let p of priorities" [value]="p">
+      {{ p }}
+    </option>
+  </select>
+</div>
+
+
+
+  <button [disabled]="form.invalid" class="btn btn-sm btn-primary" type="submit">
+    {{ data.editMode ? 'Save Changes' : 'Create Task' }}
   </button>
 </form>

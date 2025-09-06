@@ -26,6 +26,9 @@ export class TaskModalComponent implements OnInit {
   form!: FormGroup;
   opened = false;
 
+  // Define priorities array
+  priorities: string[] = ['High', 'Medium', 'Low'];
+
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<TaskModalComponent>,
@@ -35,42 +38,34 @@ export class TaskModalComponent implements OnInit {
       darkMode: boolean;
       columns: Column[];
       editMode: boolean;
-    },
+    }
   ) {}
 
   ngOnInit(): void {
     this.buildForm();
   }
 
-  buildForm() {
-    this.form = this.fb.nonNullable.group({
-      title: this.fb.control(this.data.task?.title || '', {
-        validators: [Validators.required],
-      }),
-      description: this.fb.control(this.data.task?.description || ''),
-      status: this.fb.control(
-        this.data.task?.status || this.data.columns[0].name,
-        {
-          validators: [Validators.required],
-        },
-      ),
-      subtasks: this.fb.array([
-        this.fb.nonNullable.group({
-          isCompleted: false,
-          title: ['', Validators.required],
-        }),
-        this.fb.nonNullable.group({
-          isCompleted: false,
-          title: ['', Validators.required],
-        }),
-      ]),
-    });
+ buildForm() {
+  const defaultPriority = this.priorities.includes(this.data.task?.priority)
+    ? this.data.task.priority
+    : 'Medium';
 
-    if (this.data.task?.subtasks.length > 0) {
-      this.subTaskArray.clear();
-      this.data.task.subtasks.forEach((subtask) => this.addSubtask(subtask));
-    }
+  this.form = this.fb.nonNullable.group({
+    title: this.fb.control(this.data.task?.title || '', { validators: [Validators.required] }),
+    description: this.fb.control(this.data.task?.description || ''),
+    status: this.fb.control(this.data.task?.status || this.data.columns[0].name, { validators: [Validators.required] }),
+    subtasks: this.fb.array([]),
+    priority: this.fb.control(defaultPriority, { validators: [Validators.required] })
+  });
+
+  // Populate subtasks
+  if (this.data.task?.subtasks?.length > 0) {
+    this.data.task.subtasks.forEach((subtask) => this.addSubtask(subtask));
+  } else {
+    this.addSubtask();
   }
+}
+
 
   get subTaskArray() {
     return this.form.get('subtasks') as FormArray;
@@ -104,16 +99,13 @@ export class TaskModalComponent implements OnInit {
     const editMode = this.data.editMode;
 
     if (editMode) {
-      const updatedBoard: Task = {
+      const updatedTask: Task = {
         ...this.data.task,
         ...this.form.value,
       };
-
-      this.dialogRef.close({ ...updatedBoard });
-    }
-
-    if (!editMode) {
-      this.dialogRef.close({ ...this.form.value });
+      this.dialogRef.close(updatedTask);
+    } else {
+      this.dialogRef.close(this.form.value);
     }
   }
 }
