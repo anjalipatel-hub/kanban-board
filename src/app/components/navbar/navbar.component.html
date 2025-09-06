@@ -22,7 +22,7 @@
     >
       {{ activeBoard?.name }}
     </h1>
-    <div class="flex gap-2.4 sm:pt-1.6 lg:pt-8">
+    <div class="flex gap-2.4 sm:pt-1.6 lg:pt-8  w-[16.4rem] lg:w-[19.2rem]">
       <button
         [disabled]="!activeBoard?.columns?.length"
         (click)="addTask()"
@@ -106,6 +106,13 @@
       class="text-left text-ms font-medium leading-ms text-red"
     >
       Delete Board
+    </button>
+
+    <button
+      (click)="logout()"
+      class="text-left text-ms font-medium leading-ms text-red"
+    >
+      Logout
     </button>
   </div>
 </mat-menu>

@@ -2,11 +2,14 @@ import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { Board } from '../../models/board.model';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [NgClass, NgIf, NgFor, MatMenuModule],
+  providers: [AuthService, Router],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
@@ -22,6 +25,7 @@ export class NavbarComponent {
   @Output() taskAdd = new EventEmitter<void>();
 
   sidebarShown = false;
+  constructor(private AuthService: AuthService, private router: Router) {}
 
   selectBoard(boardIdx: number): void {
     this.boardSelect.emit(boardIdx);
@@ -54,4 +58,10 @@ export class NavbarComponent {
   stopPropagation(e: Event) {
     e.stopPropagation();
   }
+  logout() {
+  this.AuthService.isLoggedInSignal.set(false);
+  this.AuthService.logout();
+  this.router.navigate(['/login']);  // ✅ this will trigger authGuard on next access
+}
+
 }

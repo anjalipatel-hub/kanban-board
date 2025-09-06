@@ -1,6 +1,7 @@
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Board } from '../models/board.model';
+import { Router } from '@angular/router';
 
 export interface User {
   id: string;
@@ -14,8 +15,10 @@ export interface User {
 })
 export class AuthService {
   private isBrowser: boolean;
+  isLoggedInSignal = signal<boolean>(false);
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, private router: Router) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
@@ -42,25 +45,20 @@ export class AuthService {
     return true;
   }
 
-  // ✅ Login with Mobile + Password
   login(mobile: string, password: string): boolean {
     if (!this.isBrowser) return false;
 
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-    const found = users.find((u) => u.mobile === mobile && u.password === password);
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const found = users.find(
+      (u: any) => u.mobile === mobile && u.password === password
+    );
 
     if (found) {
       localStorage.setItem('currentUser', JSON.stringify(found));
+      this.isLoggedInSignal.set(true); // update signal
       return true;
     }
     return false;
-  }
-
-  // ✅ Logout
-  logout() {
-    if (this.isBrowser) {
-      localStorage.removeItem('currentUser');
-    }
   }
 
   // ✅ Get Current User
@@ -69,10 +67,8 @@ export class AuthService {
     return JSON.parse(localStorage.getItem('currentUser') || 'null');
   }
 
-  // ✅ Check Logged In
-  isLoggedIn(): boolean {
-    if (!this.isBrowser) return false;
-    return !!localStorage.getItem('currentUser');
+isLoggedIn(): boolean {
+    return this.isLoggedInSignal(); // always reactive
   }
 
 getUserBoards(): Board[] {
@@ -80,6 +76,12 @@ getUserBoards(): Board[] {
   const currentUser = this.getCurrentUser();
   return currentUser?.boards || [];
 }
+logout() {
+  if (this.isBrowser) {
+    localStorage.removeItem('currentUser');
+  }
+}
+
 
 saveUserBoards(boards: Board[]): void {
   if (!this.isBrowser) return;

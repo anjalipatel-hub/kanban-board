@@ -50,7 +50,14 @@ export class BoardsComponent {
   ) {}
 
   ngOnInit(): void {
+    console.log("Fetching boards on init");
     this.boardDataService.getBoards();
+  }
+
+  ngAfterViewInit(): void {
+    console.log("afterrr boards on init");
+    this.boardDataService.getBoards();
+  
   }
 
   selectBoard(boardIdx: number) {

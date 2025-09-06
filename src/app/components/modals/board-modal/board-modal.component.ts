@@ -31,6 +31,7 @@ export class BoardModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('Board data received in modal:', this.data.board);
     this.buildForm();
   }
 
