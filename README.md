@@ -60,7 +60,7 @@ Easily persist your Kanban board data locally using the power of `localStorage`.
 
 3. **Run the App:**
 
-   Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+   Run `ng serve` or `npm start` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
  
 
 3. **UI Snapshots**
